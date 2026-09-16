@@ -74,7 +74,7 @@ export function paperFor(design: DesignId): string {
   return "#eae9e6";
 }
 
-export function extrasFor(design: DesignId): Record<ExtraId, boolean> {
+export function extrasFor(_design: DesignId): Record<ExtraId, boolean> {
   return {
     discount: true,
     tax: true,
