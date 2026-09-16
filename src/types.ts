@@ -31,10 +31,13 @@ export type InvoiceData = {
   discountPercent: number;
   taxPercent: number;
   items: LineItem[];
+  logoImage?: string;
+  qrImage?: string;
 };
 
 export type InvoiceState = {
   design: DesignId;
+  paper: string;
   blocks: Record<BlockId, boolean>;
   extras: Record<ExtraId, boolean>;
   data: InvoiceData;
@@ -42,6 +45,7 @@ export type InvoiceState = {
 
 export type InvoiceActions = {
   setDesign: (design: DesignId) => void;
+  setPaper: (paper: string) => void;
   toggleBlock: (id: BlockId) => void;
   setBlock: (id: BlockId, on: boolean) => void;
   toggleExtra: (id: ExtraId) => void;

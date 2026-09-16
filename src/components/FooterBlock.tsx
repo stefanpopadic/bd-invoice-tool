@@ -1,5 +1,8 @@
-import { Editable } from "./Editable";
+import { useRef } from "react";
+import { readImageFile } from "../image";
 import type { DesignId, ExtraId, InvoiceData } from "../types";
+import { Editable } from "./Editable";
+import { ImageUpload } from "./ImageUpload";
 
 type Props = {
   design: DesignId;
@@ -40,6 +43,8 @@ function PaymentFields({ data, onChange }: Pick<Props, "data" | "onChange">) {
 
 export function FooterBlock({ design, data, extras, onChange }: Props) {
   const compact = design === "modular-bold";
+  const logoInput = useRef<HTMLInputElement>(null);
+  const pickLogo = () => logoInput.current?.click();
 
   return (
     <div className="footer-inner">
@@ -55,15 +60,35 @@ export function FooterBlock({ design, data, extras, onChange }: Props) {
           />
         </div>
       ) : (
-        <div className="logotype">
-          <img src="/assets/symbol.svg" alt="" width={20} height={20} />
-          <Editable
-            className="word"
-            value={data.logoName}
-            ariaLabel="Logo name"
-            onChange={(logoName) => onChange({ logoName })}
+        <>
+          <button
+            className={`logotype image-upload${data.logoImage ? " is-custom" : ""}`}
+            type="button"
+            aria-label="Upload logo"
+            onClick={pickLogo}
+          >
+            {data.logoImage ? (
+              <img src={data.logoImage} alt="" />
+            ) : (
+              <>
+                <img className="logo-mark" src="/assets/symbol.svg" alt="" />
+                <span className="word">{data.logoName}</span>
+              </>
+            )}
+          </button>
+          <input
+            ref={logoInput}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              void readImageFile(file).then((logoImage) => onChange({ logoImage }));
+            }}
           />
-        </div>
+        </>
       )}
 
       {compact ? (
@@ -88,11 +113,12 @@ export function FooterBlock({ design, data, extras, onChange }: Props) {
 
       {extras.qr ? (
         <div className={compact ? "qr-bold" : "qr"}>
-          <img
-            src={compact ? "/assets/qr-bold.svg" : "/assets/qr.svg"}
-            alt="Scan to pay"
-            width={compact ? 58 : 50}
-            height={compact ? 58 : 50}
+          <ImageUpload
+            src={data.qrImage}
+            fallback={compact ? "/assets/qr-bold.svg" : "/assets/qr.svg"}
+            alt="Upload QR code"
+            maxEdge={512}
+            onUpload={(qrImage) => onChange({ qrImage })}
           />
         </div>
       ) : null}

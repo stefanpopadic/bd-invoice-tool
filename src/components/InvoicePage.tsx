@@ -1,10 +1,11 @@
+import { blocksFor } from "../defaults";
+import type { InvoiceActions, InvoiceState } from "../types";
 import { BlockFrame } from "./BlockFrame";
 import { FooterBlock } from "./FooterBlock";
 import { HeaderBlock } from "./HeaderBlock";
 import { ItemsBlock } from "./ItemsBlock";
 import { LogoBlock } from "./LogoBlock";
 import { TotalsBlock } from "./TotalsBlock";
-import type { InvoiceActions, InvoiceState } from "../types";
 
 type Props = {
   state: InvoiceState;
@@ -12,7 +13,8 @@ type Props = {
 };
 
 export function InvoicePage({ state, actions }: Props) {
-  const { design, blocks, extras, data } = state;
+  const { design, paper, extras, data } = state;
+  const blocks = blocksFor(design);
   const modular = design === "modular" || design === "modular-bold";
 
   const header = (
@@ -43,7 +45,7 @@ export function InvoicePage({ state, actions }: Props) {
   );
 
   return (
-    <div className={`page design-${design}${blocks.footer ? " has-footer" : ""}`}>
+    <div className={`page design-${design}${blocks.footer ? " has-footer" : ""}`} style={{ background: paper }}>
       {modular ? (
         <div className="stack">
           {blocks.header ? (
@@ -125,7 +127,7 @@ export function InvoicePage({ state, actions }: Props) {
 
       {blocks.logo ? (
         <BlockFrame label="logo" onRemove={() => actions.setBlock("logo", false)}>
-          <LogoBlock />
+          <LogoBlock src={data.logoImage} onUpload={(logoImage) => actions.patchData({ logoImage })} />
         </BlockFrame>
       ) : null}
     </div>

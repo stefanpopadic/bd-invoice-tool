@@ -12,6 +12,7 @@ export function loadState(): InvoiceState {
     return {
       ...fallback,
       ...parsed,
+      paper: parsed.paper || fallback.paper,
       blocks: { ...fallback.blocks, ...parsed.blocks },
       extras: { ...fallback.extras, ...parsed.extras },
       data: { ...fallback.data, ...parsed.data, items: parsed.data?.items ?? fallback.data.items },

@@ -1,7 +1,8 @@
-import { PanelRight, PanelRightClose } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { blockMeta, createState, designs, extrasFor, extraMeta } from "../defaults";
+import { blocksFor, createState, designs, extrasFor, extraMeta, paperFor } from "../defaults";
 import { CheckMark } from "../icons";
+import { exportPagePdf } from "../pdf";
 import { loadState, saveState } from "../storage";
 import type { InvoiceActions, InvoiceState, LineItem } from "../types";
 import { InvoicePage } from "./InvoicePage";
@@ -22,6 +23,8 @@ export function Editor() {
     typeof window === "undefined" ? createState() : loadState(),
   );
   const [panelOpen, setPanelOpen] = useState(true);
+  const [fit, setFit] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +35,7 @@ export function Editor() {
     const frame = frameRef.current;
     if (!frame) return;
 
-    const setUnit = () => {
+    const layout = () => {
       if (window.matchMedia("print").matches) {
         frame.style.removeProperty("--px");
         return;
@@ -43,17 +46,17 @@ export function Editor() {
       }
     };
 
-    setUnit();
-    const observer = new ResizeObserver(setUnit);
+    layout();
+    const observer = new ResizeObserver(layout);
     observer.observe(frame);
-    window.addEventListener("beforeprint", setUnit);
-    window.addEventListener("afterprint", setUnit);
+    window.addEventListener("beforeprint", layout);
+    window.addEventListener("afterprint", layout);
     return () => {
       observer.disconnect();
-      window.removeEventListener("beforeprint", setUnit);
-      window.removeEventListener("afterprint", setUnit);
+      window.removeEventListener("beforeprint", layout);
+      window.removeEventListener("afterprint", layout);
     };
-  }, [panelOpen]);
+  }, [panelOpen, fit]);
 
   const actions = useMemo<InvoiceActions>(
     () => ({
@@ -61,15 +64,16 @@ export function Editor() {
         setState((current) => ({
           ...current,
           design,
+          paper: paperFor(design),
           extras: {
             ...current.extras,
             descriptions: extrasFor(design).descriptions,
           },
-          blocks: {
-            ...current.blocks,
-            logo: design === "modular-bold" ? true : current.blocks.logo,
-          },
+          blocks: blocksFor(design),
         }));
+      },
+      setPaper: (paper) => {
+        setState((current) => ({ ...current, paper }));
       },
       toggleBlock: (id) => {
         setState((current) => ({
@@ -130,17 +134,30 @@ export function Editor() {
   );
 
   return (
-    <div className={`workspace design-${state.design}${panelOpen ? " has-panel" : ""}`}>
+    <div
+      className={`workspace design-${state.design}${panelOpen ? " has-panel" : ""}`}
+      style={{ ["--paper" as string]: state.paper }}
+    >
       {panelOpen ? null : (
         <button className="panel-toggle" type="button" aria-label="Show controls" onClick={() => setPanelOpen(true)}>
-          <PanelRight size={16} strokeWidth={1.75} />
+          <ChevronLeft size={16} strokeWidth={1.75} />
         </button>
       )}
 
       <main className="stage">
-        <div className="sheet-frame" ref={frameRef}>
-          <InvoicePage state={state} actions={actions} />
+        <div className="stage-scroll">
+          <div className={`sheet-frame${fit ? " is-fit" : ""}`} ref={frameRef}>
+            <InvoicePage state={state} actions={actions} />
+          </div>
         </div>
+        <button
+          className="zoom-btn"
+          type="button"
+          aria-label={fit ? "Zoom in" : "Zoom out"}
+          onClick={() => setFit((current) => !current)}
+        >
+          {fit ? <ZoomIn size={16} strokeWidth={1.75} /> : <ZoomOut size={16} strokeWidth={1.75} />}
+        </button>
       </main>
 
       {panelOpen ? (
@@ -151,13 +168,13 @@ export function Editor() {
               <strong>Invoice Generator</strong>
             </div>
             <button className="icon-btn" type="button" aria-label="Hide controls" onClick={() => setPanelOpen(false)}>
-              <PanelRightClose size={16} strokeWidth={1.75} />
+              <ChevronRight size={16} strokeWidth={1.75} />
             </button>
           </div>
 
           <div className="panel-body">
             <div className="group">
-              <small>Design</small>
+              <small>Presets</small>
               <div className="design-grid">
                 {designs.map((design) => (
                   <button
@@ -177,28 +194,22 @@ export function Editor() {
                   </button>
                 ))}
               </div>
+              <label className="color-picker">
+                <span className="color-swatch" style={{ background: state.paper }}>
+                  <input
+                    type="color"
+                    value={state.paper}
+                    aria-label="Background color"
+                    onChange={(event) => actions.setPaper(event.target.value)}
+                  />
+                </span>
+                <span>Background</span>
+                <span className="color-hex">{state.paper}</span>
+              </label>
             </div>
 
             <div className="group">
-              <small>Blocks</small>
-              <div className="checks">
-                {blockMeta.map((block) => (
-                  <button
-                    className={`check ${state.blocks[block.id] ? "is-on" : ""}`}
-                    type="button"
-                    key={block.id}
-                    aria-pressed={state.blocks[block.id]}
-                    onClick={() => actions.toggleBlock(block.id)}
-                  >
-                    <CheckMark />
-                    {block.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="group">
-              <small>Inside blocks</small>
+              <small>Add-ons</small>
               <div className="checks">
                 {extraMeta.map((extra) => (
                   <button
@@ -218,10 +229,22 @@ export function Editor() {
 
           <div className="panel-foot">
             <button className="btn-ghost" type="button" onClick={actions.reset}>
-              Reset sample
+              Reset to Default
             </button>
-            <button className="btn btn-primary" type="button" onClick={() => window.print()}>
-              Print / PDF
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={exporting}
+              onClick={() => {
+                const page = frameRef.current?.querySelector(".page");
+                if (!(page instanceof HTMLElement) || exporting) return;
+                setExporting(true);
+                void exportPagePdf(page, `Invoice-${state.data.number.replaceAll("/", "-")}.pdf`).finally(() => {
+                  setExporting(false);
+                });
+              }}
+            >
+              {exporting ? "Exporting…" : "Export PDF"}
             </button>
           </div>
         </aside>

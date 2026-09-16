@@ -81,6 +81,13 @@ export function blocksFor(design: DesignId): Record<BlockId, boolean> {
   };
 }
 
+export function paperFor(design: DesignId): string {
+  if (design === "detailed") return "#cfebff";
+  if (design === "modular") return "#eae4d2";
+  if (design === "modular-bold") return "#e1e1e1";
+  return "#eae9e6";
+}
+
 export function extrasFor(design: DesignId): Record<ExtraId, boolean> {
   return {
     discount: true,
@@ -101,6 +108,7 @@ export function dataFor(design: DesignId): InvoiceData {
 export function createState(design: DesignId = "simple"): InvoiceState {
   return {
     design,
+    paper: paperFor(design),
     blocks: blocksFor(design),
     extras: extrasFor(design),
     data: dataFor(design),

@@ -401,13 +401,24 @@
   height: calc(20 * var(--px));
 }
 
-.logotype img {
+.logotype.image-upload {
+  cursor: pointer;
+}
+
+.logotype .logo-mark {
   position: absolute;
   left: 0;
   top: 0;
   width: calc(20 * var(--px));
   height: calc(20 * var(--px));
   display: block;
+}
+
+.logotype.is-custom img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .logotype .word {
@@ -444,10 +455,18 @@
 
 .qr img,
 .qr-bold img,
+.qr .image-upload,
+.qr-bold .image-upload,
 .logo-large img {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.qr .image-upload img,
+.qr-bold .image-upload img,
+.logo-large.is-custom img {
+  object-fit: contain;
 }
 
 .company-right,
@@ -555,8 +574,18 @@
   height: calc(122.062 * var(--px));
 }
 
-.page:not(.design-modular-bold) .logo-large {
+.page:not(.design-modular-bold) .logo-large:not(.is-custom) {
   filter: invert(1);
+}
+
+.image-upload {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
 }
 
 .editable {
@@ -692,7 +721,8 @@
   }
 
   .line-remove,
-  .add-item {
+  .add-item,
+  .zoom-btn {
     display: none !important;
   }
 

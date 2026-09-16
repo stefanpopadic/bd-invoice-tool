@@ -1,5 +1,6 @@
 .workspace {
   --paper: #eae9e6;
+  --stage: color-mix(in srgb, var(--paper) 93%, #000 7%);
   --card: #ffffff;
   --ink: #000000;
   --mute: rgba(0, 0, 0, 0.34);
@@ -10,7 +11,7 @@
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
-  background: var(--paper);
+  background: var(--stage);
   color: var(--ink);
 }
 
@@ -27,24 +28,56 @@
 }
 
 .stage {
+  position: relative;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  background: var(--stage);
+}
+
+.stage-scroll {
+  height: 100%;
   overflow: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 5vh 0;
-  background: var(--paper);
 }
 
 .sheet-frame {
   --px: 1px;
+  position: relative;
   flex: 0 0 auto;
   width: 90%;
   height: auto;
   aspect-ratio: 595 / 842;
+  border-radius: calc(4 * var(--px));
+  overflow: hidden;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+}
+
+.sheet-frame.is-fit {
+  width: min(90%, calc((100vh - 10vh) * 595 / 842));
+}
+
+.zoom-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 8;
+  appearance: none;
+  border: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .panel-toggle {
@@ -96,8 +129,8 @@
 .panel {
   flex: 0 0 320px;
   width: 320px;
-  height: calc(100vh - 12px);
-  margin: 6px 6px 6px 0;
+  height: calc(100vh - 20px);
+  margin: 10px;
   overflow: hidden;
   padding: 14px;
   background: var(--card);
@@ -136,7 +169,7 @@
 }
 
 .brand strong {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.2;
 }
@@ -172,7 +205,6 @@
 }
 
 .btn:focus-visible,
-.design-tile:focus-visible,
 .icon-btn:focus-visible,
 .panel-toggle:focus-visible {
   outline-color: var(--ink);
@@ -254,12 +286,63 @@
   gap: 8px;
 }
 
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #f6f5f2;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.color-picker span {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.color-picker .color-hex {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+
+.color-swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.color-picker input[type="color"] {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.color-picker input[type="color"]:focus,
+.color-picker input[type="color"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .design-tile {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
   border: 0;
+  outline: none;
   border-radius: var(--radius);
   padding: 8px;
   background: #f6f5f2;
@@ -267,22 +350,28 @@
   font-size: 9px;
   line-height: 1.2;
   text-align: left;
-  outline: 1px solid transparent;
-  outline-offset: 0;
 }
 
 .design-tile:hover {
-  background: #efece8;
+  background: #ebe8e2;
 }
 
 .design-tile.is-on {
-  background: #fff;
+  background: #d6d6d6;
   color: var(--ink);
-  outline-color: var(--ink);
 }
 
 .design-tile.is-on:hover {
-  background: #fff;
+  background: #d6d6d6;
+}
+
+.design-tile:focus-visible {
+  outline: none;
+  background: #ebe8e2;
+}
+
+.design-tile.is-on:focus-visible {
+  background: #d6d6d6;
 }
 
 .design-preview {
@@ -445,7 +534,8 @@
 
 @media print {
   .panel,
-  .panel-toggle {
+  .panel-toggle,
+  .zoom-btn {
     display: none !important;
   }
 
@@ -453,7 +543,8 @@
   body,
   #root,
   .workspace,
-  .stage {
+  .stage,
+  .stage-scroll {
     display: block;
     width: 210mm !important;
     height: 297mm !important;
@@ -475,6 +566,7 @@
     max-width: 210mm !important;
     max-height: 297mm !important;
     aspect-ratio: auto !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
     flex: none !important;
   }
