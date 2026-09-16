@@ -11,8 +11,8 @@ function item(
   return { id, name, qty, amount, description, spec };
 }
 
-const serviceCopy =
-  "Description of the line item one. If it is a service, you can describe in two rows.";
+const lorem =
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
 export const sampleData: InvoiceData = {
   number: "3033/26",
@@ -31,21 +31,7 @@ export const sampleData: InvoiceData = {
   currencySymbol: "$",
   discountPercent: 15,
   taxPercent: 10,
-  items: [
-    item("1", "Line item 1", 1, 1000, serviceCopy),
-    item("2", "Line item 2", 1, 1000, serviceCopy),
-    item("3", "Line item 3", 2, 3000, serviceCopy),
-    item(
-      "4",
-      "Line item 4",
-      8,
-      2000,
-      "Description of the line item two. If it is a product, you can describe and add specs.",
-      "H33 Ø80",
-    ),
-    item("5", "Line item 5", 1, 2000),
-    item("6", "Line item 6", 1, 1000),
-  ],
+  items: [item("1", "Line item 1", 1, 1000, lorem)],
 };
 
 export const designs: { id: DesignId; label: string }[] = [
@@ -94,7 +80,7 @@ export function extrasFor(design: DesignId): Record<ExtraId, boolean> {
     tax: true,
     note: true,
     qr: true,
-    descriptions: design === "detailed",
+    descriptions: true,
   };
 }
 
